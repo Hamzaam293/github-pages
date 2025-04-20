@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<!-- saved from url=(0082)file:///C:/Users/villa%20group/Downloads/modified_budget_management_system_v2.html -->
+<html lang="ar"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة الميزانية</title>
+    <style>
+        /* تنسيق النصوص والخلفية */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .btn {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+            margin: 5px;
+            font-size: 14px;
+        }
+
+        .btn-edit {
+            background-color: #ff9800;
+        }
+
+        .btn-delete {
+            background-color: #f44336;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            font-weight: bold;
+        }
+
+        input[type="text"], input[type="number"], input[type="datetime-local"], select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+
+        th, td {
+            padding: 10px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #f1f1f1;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>نظام إدارة الميزانية</h2>
+
+    <!-- قسم الإدخالات -->
+    <button class="btn" onclick="toggleEntryForm()">إضافة حركة مالية</button>
+    
+    <form id="entryForm" style="display: none;">
+        <div class="form-group">
+            <label for="details">وصف الحركة</label>
+            <input type="text" id="details" required="">
+        </div>
+        <div class="form-group">
+            <label for="amount">المبلغ</label>
+            <input type="number" id="amount" step="0.01" required="">
+        </div>
+        <div class="form-group">
+            <label for="operation">نوع العملية</label>
+            <select id="operation" required="">
+                <option value="add">إيداع</option>
+                <option value="subtract">سحب</option>
+            </select>
+        </div>
+        <button type="button" class="btn" onclick="addEntry()">حفظ</button>
+    </form>
+
+    <!-- جدول الحركات -->
+    <table id="entriesTable">
+        <thead>
+            <tr>
+                <th>الوصف</th>
+                <th>المبلغ</th>
+                <th>النوع</th>
+                <th>الإجراءات</th>
+            </tr>
+        </thead>
+        <tbody id="entriesTableBody"><tr>
+                <td>تمهته</td>
+                <td>150.00</td>
+                <td>إيداع</td>
+                <td>
+                    <button class="btn btn-edit" onclick="editEntry(1745114726108)">تعديل</button>
+                    <button class="btn btn-delete" onclick="deleteEntry(1745114726108)">حذف</button>
+                </td>
+            </tr></tbody>
+    </table>
+
+    <!-- الإجمالي -->
+    <div id="total">
+        <h3>الرصيد الحالي: <span id="currentBalance">50882.00</span></h3>
+    </div>
+
+    <!-- قسم الخطط -->
+    <div id="plansSection">
+        <h2>إدارة الخطط</h2>
+        <div class="form-group">
+            <label for="planName">اسم الخطة</label>
+            <input type="text" id="planName" required="">
+        </div>
+        <div class="form-group">
+            <label for="startDate">تاريخ البدء</label>
+            <input type="datetime-local" id="startDate" required="">
+        </div>
+        <div class="form-group">
+            <label for="endDate">تاريخ الانتهاء</label>
+            <input type="datetime-local" id="endDate" required="">
+        </div>
+        <div class="form-group">
+            <label for="planAmount">المخصص المالي</label>
+            <input type="number" id="planAmount" step="0.01">
+        </div>
+        <button class="btn" onclick="savePlan()">حفظ الخطة</button>
+    </div>
+
+    <!-- جدول الخطط -->
+    <table id="plansTable">
+        <thead>
+            <tr>
+                <th>اسم الخطة</th>
+                <th>فترة التنفيذ</th>
+                <th>المخصص</th>
+                <th>المتاح الآن</th>
+                <th>الإجراءات</th>
+            </tr>
+        </thead>
+        <tbody id="plansTableBody"><tr>
+                <td>6448</td>
+                <td>4/1/2025, 4:46:00 AM - 5/1/2025, 4:46:00 AM</td>
+                <td>50882.00</td>
+                <td>32248.56</td>
+                <td>
+                    <button class="btn btn-edit" onclick="editPlan(1745114746691)">تعديل</button>
+                    <button class="btn btn-delete" onclick="deletePlan(1745114746691)">حذف</button>
+                </td>
+            </tr></tbody>
+    </table>
+</div>
+
+<script>
+    let currentBalance = 0;
+    let entries = [];
+    let plans = [];
+
+    // تهيئة التطبيق
+    function init() {
+        loadFromLocalStorage();
+        updateBalance();
+        renderEntries();
+        renderPlans();
+    }
+
+    // تحميل البيانات المحفوظة
+    function loadFromLocalStorage() {
+        entries = JSON.parse(localStorage.getItem('entries')) || [];
+        plans = JSON.parse(localStorage.getItem('plans')) || [];
+        currentBalance = parseFloat(localStorage.getItem('balance')) || 0;
+    }
+
+    // حفظ البيانات
+    function saveToLocalStorage() {
+        localStorage.setItem('entries', JSON.stringify(entries));
+        localStorage.setItem('plans', JSON.stringify(plans));
+        localStorage.setItem('balance', currentBalance);
+    }
+
+    // إدارة الحركات المالية
+    function toggleEntryForm() {
+        const form = document.getElementById('entryForm');
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function addEntry() {
+        const details = document.getElementById('details').value;
+        const amount = parseFloat(document.getElementById('amount').value);
+        const operation = document.getElementById('operation').value;
+
+        if (!details || isNaN(amount)) {
+            alert('الرجاء إدخال بيانات صحيحة');
+            return;
+        }
+
+        entries.push({
+            id: Date.now(),
+            details,
+            amount,
+            operation,
+            timestamp: new Date().toISOString()
+        });
+
+        if (operation === 'add') {
+            currentBalance += amount;
+        } else if (operation === 'subtract') {
+            plans.forEach(plan => {
+                if (plan.baseAmount > 0) {
+                    const availableAmount = calculateAvailableAmount(plan);
+                    const newAvailableAmount = Math.max(0, availableAmount - amount);
+                    plan.baseAmount = newAvailableAmount;
+                }
+            });
+        }
+
+        updateBalance();
+        renderEntries();
+        renderPlans();
+        saveToLocalStorage();
+        toggleEntryForm();
+    }
+
+    function updateBalance() {
+        document.getElementById('currentBalance').textContent = currentBalance.toFixed(2);
+    }
+
+    function renderEntries() {
+        const tbody = document.querySelector('#entriesTableBody');
+        tbody.innerHTML = '';
+
+        entries.forEach(entry => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${entry.details}</td>
+                <td>${entry.amount.toFixed(2)}</td>
+                <td>${entry.operation === 'add' ? 'إيداع' : 'سحب'}</td>
+                <td>
+                    <button class="btn btn-edit" onclick="editEntry(${entry.id})">تعديل</button>
+                    <button class="btn btn-delete" onclick="deleteEntry(${entry.id})">حذف</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function renderPlans() {
+        const tbody = document.querySelector('#plansTableBody');
+        tbody.innerHTML = '';
+
+        plans.forEach(plan => {
+            const available = calculateAvailableAmount(plan);
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${plan.planName}</td>
+                <td>${new Date(plan.startDate).toLocaleString()} - ${new Date(plan.endDate).toLocaleString()}</td>
+                <td>${plan.baseAmount.toFixed(2)}</td>
+                <td>${available.toFixed(2)}</td>
+                <td>
+                    <button class="btn btn-edit" onclick="editPlan(${plan.id})">تعديل</button>
+                    <button class="btn btn-delete" onclick="deletePlan(${plan.id})">حذف</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function calculateAvailableAmount(plan) {
+        const now = new Date();
+        const start = new Date(plan.startDate);
+        const end = new Date(plan.endDate);
+        
+        if (now < start) return 0;
+        if (now > end) return plan.baseAmount;
+        
+        const totalTime = end - start;
+        const elapsed = now - start;
+        
+        return (elapsed / totalTime) * plan.baseAmount;
+    }
+
+    function savePlan() {
+        const planName = document.getElementById('planName').value;
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        const planAmount = document.getElementById('planAmount').value;
+
+        if (!planName || !startDate || !endDate) {
+            alert('الرجاء إكمال جميع الحقول المطلوبة');
+            return;
+        }
+
+        if (new Date(startDate) >= new Date(endDate)) {
+            alert('تاريخ البدء يجب أن يسبق تاريخ الانتهاء');
+            return;
+        }
+
+        const baseAmount = planAmount ? parseFloat(planAmount) : currentBalance;
+        
+        const plan = {
+            id: Date.now(),
+            planName,
+            startDate,
+            endDate,
+            baseAmount,
+            createdAt: new Date().toISOString()
+        };
+
+        plans.push(plan);
+        renderPlans();
+        saveToLocalStorage();
+    }
+
+    function editEntry(id) {
+        alert(`تعديل الحركة المالية برقم التعريف: ${id}`);
+    }
+
+    function deleteEntry(id) {
+        entries = entries.filter(entry => entry.id !== id);
+        renderEntries();
+        saveToLocalStorage();
+    }
+
+    function editPlan(id) {
+        alert(`تعديل الخطة برقم التعريف: ${id}`);
+    }
+
+    function deletePlan(id) {
+        plans = plans.filter(plan => plan.id !== id);
+        renderPlans();
+        saveToLocalStorage();
+    }
+
+    // التشغيل الأولي
+    init();
+</script>
+
+
+
+</body></html>
